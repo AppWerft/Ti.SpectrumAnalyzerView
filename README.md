@@ -7,7 +7,7 @@ You need the runtime permission _AUDIO_RECORDING_
 
 ```javascript
 var SA = require("ti.spectrumanalyzer");
-var win = Ti.UI.createWindow();
+
 var SpectrumView = SA.createView({
 	color : "green",
 	backgroundColor : "black",
@@ -17,7 +17,11 @@ var SpectrumView = SA.createView({
 	height : 300
 	
 });
-window.add(SpectrumView);
-SpectrumView.start();
+var Window = Ti.UI.createWindow();
+Window.add(SpectrumView);
+
+Window.addEventListener("focus",function(){SpectrumView.start();});
+Window.addEventListener("blur",function(){SpectrumView.stop();});
+
 
 ```
