@@ -9,96 +9,122 @@
 package ti.spectrumanalyzer;
 
 import org.appcelerator.kroll.KrollDict;
-import org.appcelerator.kroll.KrollProxy;
 import org.appcelerator.kroll.annotations.Kroll;
-import org.appcelerator.titanium.TiC;
+import org.appcelerator.kroll.common.AsyncResult;
+import org.appcelerator.kroll.common.TiMessenger;
+import org.appcelerator.titanium.TiApplication;
+import org.appcelerator.titanium.proxy.TiViewProxy;
 import org.appcelerator.titanium.util.Log;
 import org.appcelerator.titanium.util.TiConfig;
-import org.appcelerator.titanium.util.TiConvert;
-import org.appcelerator.titanium.proxy.TiViewProxy;
-import org.appcelerator.titanium.view.TiCompositeLayout;
-import org.appcelerator.titanium.view.TiCompositeLayout.LayoutArrangement;
 import org.appcelerator.titanium.view.TiUIView;
 
 import android.app.Activity;
-
+import android.os.Message;
 
 // This proxy can be created by calling Spectrumanalyzer.createExample({message: "hello world"})
-@Kroll.proxy(creatableInModule=SpectrumanalyzerModule.class)
-public class ViewProxy extends TiViewProxy
-{
+@Kroll.proxy(creatableInModule = SpectrumanalyzerModule.class)
+public class ViewProxy extends TiViewProxy {
 	// Standard Debugging variables
-	private static final String LCAT = "ExampleProxy";
-	private static final boolean DBG = TiConfig.LOGD;
-
-	private class ExampleView extends TiUIView
-	{
-		public ExampleView(TiViewProxy proxy) {
-			super(proxy);
-			LayoutArrangement arrangement = LayoutArrangement.DEFAULT;
-
-			if (proxy.hasProperty(TiC.PROPERTY_LAYOUT)) {
-				String layoutProperty = TiConvert.toString(proxy.getProperty(TiC.PROPERTY_LAYOUT));
-				if (layoutProperty.equals(TiC.LAYOUT_HORIZONTAL)) {
-					arrangement = LayoutArrangement.HORIZONTAL;
-				} else if (layoutProperty.equals(TiC.LAYOUT_VERTICAL)) {
-					arrangement = LayoutArrangement.VERTICAL;
-				}
-			}
-			setNativeView(new TiCompositeLayout(proxy.getActivity(), arrangement));
-		}
-
-		@Override
-		public void processProperties(KrollDict d)
-		{
-			super.processProperties(d);
-		}
-	}
-
+	private static final String LCAT = "Spectrum";
+	private static final int MSG_FIRST_ID = TiViewProxy.MSG_LAST_ID + 1;
+	private static final int MSG_START = MSG_FIRST_ID + 500;
+	private static final int MSG_STOP = MSG_FIRST_ID + 501;
 
 	// Constructor
-	public ViewProxy()
-	{
+	public ViewProxy() {
 		super();
 	}
 
 	@Override
-	public TiUIView createView(Activity activity)
-	{
-		TiUIView view = new ExampleView(this);
+	public TiUIView createView(Activity activity) {
+		TiUIView view = new TiSpectrumView(this);
 		view.getLayoutParams().autoFillsHeight = true;
 		view.getLayoutParams().autoFillsWidth = true;
 		return view;
 	}
 
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@Override
+	public boolean handleMessage(Message msg) {
+		AsyncResult result = null;
+		switch (msg.what) {
+
+		case MSG_START: {
+			result = (AsyncResult) msg.obj;
+			handleStart();
+			result.setResult(null);
+			return true;
+		}
+		case MSG_STOP: {
+			result = (AsyncResult) msg.obj;
+			handleStop();
+			result.setResult(null);
+			return true;
+		}
+		default: {
+			return super.handleMessage(msg);
+		}
+		}
+	}
+
+	@Kroll.method
+	public void start() {
+		if (TiApplication.isUIThread()) {
+			Log.d(LCAT, "direct handleStart()");
+			handleStart();
+		} else {
+			Log.d(LCAT, "indirect handleStart() by TiMessenger");
+			TiMessenger.sendBlockingMainMessage(getMainHandler().obtainMessage(
+					MSG_START));
+
+		}
+	}
+
+	private void handleStart() {
+
+	}
+
+	@Kroll.method
+	public void stop() {
+		if (TiApplication.isUIThread()) {
+			handleStart();
+		} else {
+			TiMessenger.sendBlockingMainMessage(getMainHandler().obtainMessage(
+					MSG_STOP));
+
+		}
+	}
+
+	private void handleStop() {
+
+	}
+
 	// Handle creation options
 	@Override
-	public void handleCreationDict(KrollDict options)
-	{
+	public void handleCreationDict(KrollDict options) {
 		super.handleCreationDict(options);
 
 		if (options.containsKey("message")) {
-			Log.d(LCAT, "example created with message: " + options.get("message"));
+			Log.d(LCAT,
+					"example created with message: " + options.get("message"));
 		}
 	}
 
 	// Methods
 	@Kroll.method
-	public void printMessage(String message)
-	{
+	public void printMessage(String message) {
 		Log.d(LCAT, "printing message: " + message);
 	}
 
-
-	@Kroll.getProperty @Kroll.method
-	public String getMessage()
-	{
-        return "Hello World from my module";
+	@Kroll.getProperty
+	@Kroll.method
+	public String getMessage() {
+		return "Hello World from my module";
 	}
 
-	@Kroll.setProperty @Kroll.method
-	public void setMessage(String message)
-	{
-	    Log.d(LCAT, "Tried setting module message to: " + message);
+	@Kroll.setProperty
+	@Kroll.method
+	public void setMessage(String message) {
+		Log.d(LCAT, "Tried setting module message to: " + message);
 	}
 }
