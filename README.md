@@ -13,7 +13,8 @@ var SpectrumView = SA.createView({
 	backgroundColor : "black",
 	frequency :  44100, // optional
 	blockSize :  512, // optional
-	fade : 1000,
+	fade : true,
+	fadeTime : 1000,
 	width: "90%",
 	top: 10,
 	height : 300
