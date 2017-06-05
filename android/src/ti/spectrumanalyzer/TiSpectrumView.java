@@ -46,8 +46,11 @@ public class TiSpectrumView extends TiUIView {
 		super(proxy);
 		this.proxy = proxy;
 		KrollDict opts = proxy.getProperties();
+		if (opts.containsKeyAndNotNull("frequency"))
+			frequency = opts.getInt("frequency");
+		if (opts.containsKeyAndNotNull("blockSize"))
+			blockSize = opts.getInt("blockSize");
 		LayoutArrangement arrangement = LayoutArrangement.DEFAULT;
-
 		if (proxy.hasProperty(TiC.PROPERTY_LAYOUT)) {
 			String layoutProperty = TiConvert.toString(proxy
 					.getProperty(TiC.PROPERTY_LAYOUT));
