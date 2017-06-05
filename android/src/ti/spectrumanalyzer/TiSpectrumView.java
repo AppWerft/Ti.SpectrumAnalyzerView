@@ -28,6 +28,7 @@ public class TiSpectrumView extends TiUIView {
 	private RealDoubleFFT transformer;
 	int blockSize = 256;
 	int frequency = 44100;
+	int color = Color.GREEN;
 	int width;
 	int height;
 	int channelConfiguration = AudioFormat.CHANNEL_IN_MONO;
@@ -102,7 +103,6 @@ public class TiSpectrumView extends TiUIView {
 			audioRecord.stop();
 		} catch (IllegalStateException e) {
 			Log.e("Stop failed", e.toString());
-
 		}
 		canvasDisplaySpectrum.drawColor(Color.BLACK);
 	}
@@ -119,7 +119,6 @@ public class TiSpectrumView extends TiUIView {
 
 		@Override
 		protected Boolean doInBackground(Void... params) {
-
 			int bufferSize = AudioRecord.getMinBufferSize(frequency,
 					channelConfiguration, audioEncoding);
 			audioRecord = new AudioRecord(MediaRecorder.AudioSource.DEFAULT,
@@ -131,7 +130,6 @@ public class TiSpectrumView extends TiUIView {
 				audioRecord.startRecording();
 			} catch (IllegalStateException e) {
 				Log.e("Recording failed", e.toString());
-
 			}
 			while (started) {
 				if (isCancelled() || (CANCELLED_FLAG == true)) {
@@ -174,11 +172,8 @@ public class TiSpectrumView extends TiUIView {
 				Log.e("Stop failed", e.toString());
 
 			}
-
 			canvasDisplaySpectrum.drawColor(Color.BLACK);
 			imageViewDisplaySpectrum.invalidate();
-
 		}
 	}
-
 }
