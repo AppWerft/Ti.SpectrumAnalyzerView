@@ -28,6 +28,8 @@ public class TiSpectrumView extends TiUIView {
 	private RealDoubleFFT transformer;
 	int blockSize = 256;
 	int frequency = 44100;
+	int width;
+	int height;
 	int channelConfiguration = AudioFormat.CHANNEL_IN_MONO;
 	int audioEncoding = AudioFormat.ENCODING_PCM_16BIT;
 	AudioRecord audioRecord;
@@ -66,11 +68,21 @@ public class TiSpectrumView extends TiUIView {
 
 	public void init() {
 		transformer = new RealDoubleFFT(blockSize);
+
+		// imageview as container for ImageBitmap
 		imageViewDisplaySpectrum = new ImageView(TiApplication.getInstance());
-		bitmapDisplaySpectrum = Bitmap.createBitmap((int) 512, (int) 300,
+		layout.addView(imageViewDisplaySpectrum);
+		width = imageViewDisplaySpectrum.getWidth();
+		height = imageViewDisplaySpectrum.getHeight();
+
+		bitmapDisplaySpectrum = Bitmap.createBitmap(width, height,
 				Bitmap.Config.ARGB_8888);
 		canvasDisplaySpectrum = new Canvas(bitmapDisplaySpectrum);
-		layout.addView(imageViewDisplaySpectrum);
+
+		paintSpectrumDisplay = new Paint();
+		paintSpectrumDisplay.setColor(Color.GREEN);
+		imageViewDisplaySpectrum.setImageBitmap(bitmapDisplaySpectrum);
+
 	}
 
 	public void start() {
