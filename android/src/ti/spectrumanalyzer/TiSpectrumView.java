@@ -35,6 +35,7 @@ public class TiSpectrumView extends TiUIView {
 	boolean CANCELLED_FLAG = false;
 	Canvas canvasDisplaySpectrum;
 	Bitmap bitmapDisplaySpectrum;
+	RecordAudio recordTask;
 
 	Paint paintSpectrumDisplay;
 	ImageView imageViewDisplaySpectrum;
@@ -73,11 +74,22 @@ public class TiSpectrumView extends TiUIView {
 	}
 
 	public void start() {
+		started = true;
+		CANCELLED_FLAG = false;
 
+		recordTask = new RecordAudio();
+		recordTask.execute();
 	}
 
 	public void stop() {
+		CANCELLED_FLAG = true;
+		try {
+			audioRecord.stop();
+		} catch (IllegalStateException e) {
+			Log.e("Stop failed", e.toString());
 
+		}
+		canvasDisplaySpectrum.drawColor(Color.BLACK);
 	}
 
 	private float handleCalculateHeight() {
