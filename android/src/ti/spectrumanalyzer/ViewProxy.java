@@ -11,11 +11,10 @@ package ti.spectrumanalyzer;
 import org.appcelerator.kroll.KrollDict;
 import org.appcelerator.kroll.annotations.Kroll;
 import org.appcelerator.kroll.common.AsyncResult;
+import org.appcelerator.kroll.common.Log;
 import org.appcelerator.kroll.common.TiMessenger;
 import org.appcelerator.titanium.TiApplication;
 import org.appcelerator.titanium.proxy.TiViewProxy;
-import org.appcelerator.titanium.util.Log;
-import org.appcelerator.titanium.util.TiConfig;
 import org.appcelerator.titanium.view.TiUIView;
 
 import android.app.Activity;
@@ -29,6 +28,7 @@ public class ViewProxy extends TiViewProxy {
 	private static final int MSG_FIRST_ID = TiViewProxy.MSG_LAST_ID + 1;
 	private static final int MSG_START = MSG_FIRST_ID + 500;
 	private static final int MSG_STOP = MSG_FIRST_ID + 501;
+	TiSpectrumView view;
 
 	// Constructor
 	public ViewProxy() {
@@ -37,7 +37,7 @@ public class ViewProxy extends TiViewProxy {
 
 	@Override
 	public TiUIView createView(Activity activity) {
-		TiUIView view = new TiSpectrumView(this);
+		view = new TiSpectrumView(this);
 		view.getLayoutParams().autoFillsHeight = true;
 		view.getLayoutParams().autoFillsWidth = true;
 		return view;
@@ -81,7 +81,13 @@ public class ViewProxy extends TiViewProxy {
 	}
 
 	private void handleStart() {
+		if (view != null)
+			view.start();
+	}
 
+	private void handleStop() {
+		if (view != null)
+			view.stop();
 	}
 
 	@Kroll.method
@@ -93,10 +99,6 @@ public class ViewProxy extends TiViewProxy {
 					MSG_STOP));
 
 		}
-	}
-
-	private void handleStop() {
-
 	}
 
 	// Handle creation options
