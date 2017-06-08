@@ -24,11 +24,12 @@ import android.os.Message;
 @Kroll.proxy(creatableInModule = SpectrumanalyzerModule.class)
 public class ViewProxy extends TiViewProxy {
 	// Standard Debugging variables
-	private static final String LCAT = "Spectrum";
+	private static final String LCAT = "TiSpec";
 	private static final int MSG_FIRST_ID = TiViewProxy.MSG_LAST_ID + 1;
 	private static final int MSG_START = MSG_FIRST_ID + 500;
 	private static final int MSG_STOP = MSG_FIRST_ID + 501;
 	TiSpectrumView view;
+	private boolean shouldstart = false;
 
 	// Constructor
 	public ViewProxy() {
@@ -37,9 +38,13 @@ public class ViewProxy extends TiViewProxy {
 
 	@Override
 	public TiUIView createView(Activity activity) {
+		Log.d(LCAT, "createView in ViewProxy");
 		view = new TiSpectrumView(this);
 		view.getLayoutParams().autoFillsHeight = true;
 		view.getLayoutParams().autoFillsWidth = true;
+		if (shouldstart)
+			view.start();
+		shouldstart = false;
 		return view;
 	}
 
@@ -51,6 +56,7 @@ public class ViewProxy extends TiViewProxy {
 
 		case MSG_START: {
 			result = (AsyncResult) msg.obj;
+			Log.d(LCAT, "handleMessage START");
 			handleStart();
 			result.setResult(null);
 			return true;
@@ -73,7 +79,6 @@ public class ViewProxy extends TiViewProxy {
 			Log.d(LCAT, "direct handleStart()");
 			handleStart();
 		} else {
-			Log.d(LCAT, "indirect handleStart() by TiMessenger");
 			TiMessenger.sendBlockingMainMessage(getMainHandler().obtainMessage(
 					MSG_START));
 
@@ -81,8 +86,11 @@ public class ViewProxy extends TiViewProxy {
 	}
 
 	private void handleStart() {
+
 		if (view != null)
 			view.start();
+		else
+			shouldstart = true;
 	}
 
 	private void handleStop() {
@@ -112,21 +120,31 @@ public class ViewProxy extends TiViewProxy {
 		}
 	}
 
-	// Methods
-	@Kroll.method
-	public void printMessage(String message) {
-		Log.d(LCAT, "printing message: " + message);
+	public void onDestroy(Activity activity) {
+		stop();
+		super.onDestroy(activity);
 	}
 
-	@Kroll.getProperty
-	@Kroll.method
-	public String getMessage() {
-		return "Hello World from my module";
+	@Override
+	public void onStop(Activity activity) {
+		handleStop();
+		super.onStop(activity);
 	}
 
-	@Kroll.setProperty
-	@Kroll.method
-	public void setMessage(String message) {
-		Log.d(LCAT, "Tried setting module message to: " + message);
+	@Override
+	public void onResume(Activity activity) {
+		super.onResume(activity);
+		handleStart();
+	}
+
+	@Override
+	public void onPause(Activity activity) {
+		handleStop();
+		super.onPause(activity);
+	}
+
+	public void onStart(Activity activity) {
+		super.onStart(activity);
+		handleStart();
 	}
 }

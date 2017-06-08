@@ -4,6 +4,7 @@ import org.appcelerator.kroll.KrollDict;
 import org.appcelerator.kroll.common.Log;
 import org.appcelerator.titanium.TiApplication;
 import org.appcelerator.titanium.TiC;
+import org.appcelerator.titanium.TiDimension;
 import org.appcelerator.titanium.proxy.TiViewProxy;
 import org.appcelerator.titanium.util.TiConvert;
 import org.appcelerator.titanium.view.TiCompositeLayout;
@@ -11,6 +12,7 @@ import org.appcelerator.titanium.view.TiUIView;
 import org.appcelerator.titanium.view.TiCompositeLayout.LayoutArrangement;
 
 import ca.uol.aig.fftpack.RealDoubleFFT;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -20,11 +22,13 @@ import android.media.AudioRecord;
 import android.media.MediaRecorder;
 import android.os.AsyncTask;
 import android.view.View;
+import android.view.ViewGroup.LayoutParams;
 import android.widget.ImageView;
 
 public class TiSpectrumView extends TiUIView {
+	final static String LCAT = "TiSpec";
 	TiViewProxy proxy;
-	TiCompositeLayout layout;
+	TiCompositeLayout view;
 	private RealDoubleFFT transformer;
 	int blockSize = 256;
 	int frequency = 44100;
@@ -36,33 +40,30 @@ public class TiSpectrumView extends TiUIView {
 	AudioRecord audioRecord;
 	boolean started = false;
 	boolean CANCELLED_FLAG = false;
-	Canvas canvasDisplaySpectrum;
-	Bitmap bitmapDisplaySpectrum;
+	Canvas canvasDS;
+	Bitmap bitmapDS;
 	RecordAudio recordTask;
-
-	Paint paintSpectrumDisplay;
-	ImageView imageViewDisplaySpectrum;
+	Context ctx;
+	Paint paintSD;
+	ImageView imageViewDS;
 
 	public TiSpectrumView(TiViewProxy proxy) {
 		super(proxy);
 		this.proxy = proxy;
+		ctx = TiApplication.getInstance().getApplicationContext();
 		KrollDict opts = proxy.getProperties();
 		if (opts.containsKeyAndNotNull("frequency"))
 			frequency = opts.getInt("frequency");
 		if (opts.containsKeyAndNotNull("blockSize"))
 			blockSize = opts.getInt("blockSize");
-		LayoutArrangement arrangement = LayoutArrangement.DEFAULT;
-		if (proxy.hasProperty(TiC.PROPERTY_LAYOUT)) {
-			String layoutProperty = TiConvert.toString(proxy
-					.getProperty(TiC.PROPERTY_LAYOUT));
-			if (layoutProperty.equals(TiC.LAYOUT_HORIZONTAL)) {
-				arrangement = LayoutArrangement.HORIZONTAL;
-			} else if (layoutProperty.equals(TiC.LAYOUT_VERTICAL)) {
-				arrangement = LayoutArrangement.VERTICAL;
-			}
-		}
-		layout = new TiCompositeLayout(proxy.getActivity(), arrangement);
-		setNativeView(layout);
+		if (opts.containsKeyAndNotNull(TiC.PROPERTY_COLOR))
+			color = TiConvert.toColor(opts.getString(TiC.PROPERTY_COLOR));
+		view = new TiSpectrumLayout(proxy.getActivity(),
+				LayoutArrangement.DEFAULT);
+		setNativeView(view);
+		transformer = new RealDoubleFFT(blockSize);
+		paintSD = new Paint();
+		paintSD.setColor(color);
 	}
 
 	@Override
@@ -70,31 +71,27 @@ public class TiSpectrumView extends TiUIView {
 		super.processProperties(d);
 	}
 
-	public void init() {
-		transformer = new RealDoubleFFT(blockSize);
-
-		// imageview as container for ImageBitmap
-		imageViewDisplaySpectrum = new ImageView(TiApplication.getInstance());
-		layout.addView(imageViewDisplaySpectrum);
-		width = imageViewDisplaySpectrum.getWidth();
-		height = imageViewDisplaySpectrum.getHeight();
-
-		bitmapDisplaySpectrum = Bitmap.createBitmap(width, height,
-				Bitmap.Config.ARGB_8888);
-		canvasDisplaySpectrum = new Canvas(bitmapDisplaySpectrum);
-
-		paintSpectrumDisplay = new Paint();
-		paintSpectrumDisplay.setColor(Color.GREEN);
-		imageViewDisplaySpectrum.setImageBitmap(bitmapDisplaySpectrum);
-
+	public void initRenderer() {
+		imageViewDS = new ImageView(ctx);
+		view.addView(imageViewDS, new LayoutParams(width, height));
+		Log.d(LCAT, "w x h = " + width + "x" + height);
+		Log.d(LCAT, "imageViewDS.getWidth = " + imageViewDS.getWidth());
+		if (width > 0 && height > 0) {
+			bitmapDS = Bitmap.createBitmap(width, height,
+					Bitmap.Config.ARGB_8888);
+			imageViewDS.setImageBitmap(bitmapDS);
+			canvasDS = new Canvas(bitmapDS);
+			Log.d(LCAT, "TiSpectrumView initialized");
+		} else
+			Log.w(LCAT, "width was 0");
 	}
 
 	public void start() {
 		started = true;
 		CANCELLED_FLAG = false;
-
 		recordTask = new RecordAudio();
 		recordTask.execute();
+		Log.d(LCAT, "TiSpectrumView started");
 	}
 
 	public void stop() {
@@ -104,15 +101,7 @@ public class TiSpectrumView extends TiUIView {
 		} catch (IllegalStateException e) {
 			Log.e("Stop failed", e.toString());
 		}
-		canvasDisplaySpectrum.drawColor(Color.BLACK);
-	}
-
-	private float handleCalculateHeight() {
-		layout.setVisibility(View.VISIBLE);
-		layout.measure(View.MeasureSpec.makeMeasureSpec(0,
-				View.MeasureSpec.UNSPECIFIED), View.MeasureSpec
-				.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));
-		return layout.getMeasuredHeight();
+		canvasDS.drawColor(Color.BLACK);
 	}
 
 	private class RecordAudio extends AsyncTask<Void, double[], Boolean> {
@@ -121,6 +110,7 @@ public class TiSpectrumView extends TiUIView {
 		protected Boolean doInBackground(Void... params) {
 			int bufferSize = AudioRecord.getMinBufferSize(frequency,
 					channelConfiguration, audioEncoding);
+			Log.d(LCAT, "Buffersize=" + bufferSize);
 			audioRecord = new AudioRecord(MediaRecorder.AudioSource.DEFAULT,
 					frequency, channelConfiguration, audioEncoding, bufferSize);
 			int bufferReadResult;
@@ -129,7 +119,7 @@ public class TiSpectrumView extends TiUIView {
 			try {
 				audioRecord.startRecording();
 			} catch (IllegalStateException e) {
-				Log.e("Recording failed", e.toString());
+				Log.e(LCAT, "Recording failed" + e.toString());
 			}
 			while (started) {
 				if (isCancelled() || (CANCELLED_FLAG == true)) {
@@ -151,16 +141,18 @@ public class TiSpectrumView extends TiUIView {
 
 		@Override
 		protected void onProgressUpdate(double[]... progress) {
-			Log.e("RecordingProgress", "Displaying in progress");
-			Log.d("Test:", Integer.toString(progress[0].length));
+			// Log.e(LCAT, "RecordingProgress Displaying in progress");
+			// Log.d(LCAT, "Test:" + Integer.toString(progress[0].length));
 			for (int i = 0; i < progress[0].length; i++) {
 				int x = 2 * i;
 				int downy = (int) (150 - (progress[0][i] * 10));
 				int upy = 150;
-				canvasDisplaySpectrum.drawLine(x, downy, x, upy,
-						paintSpectrumDisplay);
+				canvasDS.drawLine(x, downy, x, upy, paintSD);
+				// Log.d(LCAT, "x=" + x + " downy=" + downy + " x=" + x +
+				// " upy="
+				// + upy);
 			}
-			imageViewDisplaySpectrum.invalidate();
+			imageViewDS.invalidate();
 		}
 
 		@Override
@@ -172,8 +164,48 @@ public class TiSpectrumView extends TiUIView {
 				Log.e("Stop failed", e.toString());
 
 			}
-			canvasDisplaySpectrum.drawColor(Color.BLACK);
-			imageViewDisplaySpectrum.invalidate();
+			canvasDS.drawColor(Color.BLACK);
+			imageViewDS.invalidate();
 		}
 	}
+
+	public class TiSpectrumLayout extends TiCompositeLayout {
+		public TiSpectrumLayout(Context context, LayoutArrangement arrangement) {
+			super(context, arrangement, proxy);
+		}
+
+		@Override
+		protected int getWidthMeasureSpec(View child) {
+
+			return super.getWidthMeasureSpec(child);
+
+		}
+
+		@Override
+		protected int getHeightMeasureSpec(View child) {
+			return super.getHeightMeasureSpec(child);
+
+		}
+
+		@Override
+		protected int getMeasuredWidth(int maxWidth, int widthSpec) {
+			return resolveSize(maxWidth, widthSpec);
+		}
+
+		@Override
+		protected void onLayout(boolean changed, int l, int t, int r, int b) {
+			if (changed) {
+				width = this.getWidth();
+				height = this.getHeight();
+				initRenderer();
+			}
+		}
+
+		@Override
+		protected int getMeasuredHeight(int maxHeight, int heightSpec) {
+			return resolveSize(maxHeight, heightSpec);
+
+		}
+	}
+
 }
