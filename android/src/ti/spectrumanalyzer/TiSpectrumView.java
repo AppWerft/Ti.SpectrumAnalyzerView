@@ -12,6 +12,7 @@ import org.appcelerator.titanium.view.TiUIView;
 import org.appcelerator.titanium.view.TiCompositeLayout.LayoutArrangement;
 
 import ca.uol.aig.fftpack.RealDoubleFFT;
+import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -24,6 +25,7 @@ import android.os.AsyncTask;
 import android.view.View;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 
 public class TiSpectrumView extends TiUIView {
 	final static String LCAT = "TiSpec";
@@ -44,26 +46,28 @@ public class TiSpectrumView extends TiUIView {
 	Bitmap bitmapDS;
 	RecordAudio recordTask;
 	Context ctx;
-	Paint paintSD;
+	Paint paintSD = new Paint();
 	ImageView imageViewDS;
+	Activity activity;
 
-	public TiSpectrumView(TiViewProxy proxy) {
-		super(proxy);
-		this.proxy = proxy;
+	public TiSpectrumView(final TiViewProxy _proxy) {
+		super(_proxy);
+		// copy proxy instance
+		proxy = _proxy;
+		activity = proxy.getActivity();
+		// getting context from TiApp
 		ctx = TiApplication.getInstance().getApplicationContext();
-		KrollDict opts = proxy.getProperties();
-		if (opts.containsKeyAndNotNull("frequency"))
-			frequency = opts.getInt("frequency");
-		if (opts.containsKeyAndNotNull("blockSize"))
-			blockSize = opts.getInt("blockSize");
-		if (opts.containsKeyAndNotNull(TiC.PROPERTY_COLOR))
-			color = TiConvert.toColor(opts.getString(TiC.PROPERTY_COLOR));
-		view = new TiSpectrumLayout(proxy.getActivity(),
-				LayoutArrangement.DEFAULT);
-		setNativeView(view);
+		// creating empty container
+		SpectrumLayout container = new SpectrumLayout(activity);
+		container.setLayoutParams(new LayoutParams(LayoutParams.WRAP_CONTENT,
+				LayoutParams.WRAP_CONTENT));
+		imageViewDS = new ImageView(activity);
+		container.addView(imageViewDS);
+		setNativeView(container);
 		transformer = new RealDoubleFFT(blockSize);
-		paintSD = new Paint();
+
 		paintSD.setColor(color);
+		// initRenderer();
 	}
 
 	@Override
@@ -72,8 +76,6 @@ public class TiSpectrumView extends TiUIView {
 	}
 
 	public void initRenderer() {
-		imageViewDS = new ImageView(ctx);
-		view.addView(imageViewDS, new LayoutParams(width, height));
 		Log.d(LCAT, "w x h = " + width + "x" + height);
 		Log.d(LCAT, "imageViewDS.getWidth = " + imageViewDS.getWidth());
 		if (width > 0 && height > 0) {
@@ -141,16 +143,18 @@ public class TiSpectrumView extends TiUIView {
 
 		@Override
 		protected void onProgressUpdate(double[]... progress) {
-			// Log.e(LCAT, "RecordingProgress Displaying in progress");
-			// Log.d(LCAT, "Test:" + Integer.toString(progress[0].length));
-			for (int i = 0; i < progress[0].length; i++) {
-				int x = 2 * i;
-				int downy = (int) (150 - (progress[0][i] * 10));
-				int upy = 150;
+			double[] vals = progress[0];
+			if (vals.length == 0 || canvasDS == null)
+				return;
+			for (int i = 0; i < vals.length; i++) {
+				int x = width * i / vals.length;
+				int downy = (int) (height / 2 - (vals[i] * 10));
+				int upy = height / 2;
+
 				canvasDS.drawLine(x, downy, x, upy, paintSD);
-				// Log.d(LCAT, "x=" + x + " downy=" + downy + " x=" + x +
-				// " upy="
-				// + upy);
+				if (i == 0)
+					Log.d(LCAT, "Y = " + downy + " LEN = " + vals.length);
+
 			}
 			imageViewDS.invalidate();
 		}
@@ -169,27 +173,9 @@ public class TiSpectrumView extends TiUIView {
 		}
 	}
 
-	public class TiSpectrumLayout extends TiCompositeLayout {
-		public TiSpectrumLayout(Context context, LayoutArrangement arrangement) {
-			super(context, arrangement, proxy);
-		}
-
-		@Override
-		protected int getWidthMeasureSpec(View child) {
-
-			return super.getWidthMeasureSpec(child);
-
-		}
-
-		@Override
-		protected int getHeightMeasureSpec(View child) {
-			return super.getHeightMeasureSpec(child);
-
-		}
-
-		@Override
-		protected int getMeasuredWidth(int maxWidth, int widthSpec) {
-			return resolveSize(maxWidth, widthSpec);
+	public class SpectrumLayout extends LinearLayout {
+		public SpectrumLayout(Context context) {
+			super(context);
 		}
 
 		@Override
@@ -199,12 +185,6 @@ public class TiSpectrumView extends TiUIView {
 				height = this.getHeight();
 				initRenderer();
 			}
-		}
-
-		@Override
-		protected int getMeasuredHeight(int maxHeight, int heightSpec) {
-			return resolveSize(maxHeight, heightSpec);
-
 		}
 	}
 

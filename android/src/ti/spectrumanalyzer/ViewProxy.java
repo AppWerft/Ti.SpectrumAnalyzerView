@@ -28,7 +28,7 @@ public class ViewProxy extends TiViewProxy {
 	private static final int MSG_FIRST_ID = TiViewProxy.MSG_LAST_ID + 1;
 	private static final int MSG_START = MSG_FIRST_ID + 500;
 	private static final int MSG_STOP = MSG_FIRST_ID + 501;
-	TiSpectrumView view;
+	TiSpectrumView tiSpectrumView;
 	private boolean shouldstart = false;
 
 	// Constructor
@@ -39,13 +39,13 @@ public class ViewProxy extends TiViewProxy {
 	@Override
 	public TiUIView createView(Activity activity) {
 		Log.d(LCAT, "createView in ViewProxy");
-		view = new TiSpectrumView(this);
-		view.getLayoutParams().autoFillsHeight = true;
-		view.getLayoutParams().autoFillsWidth = true;
+		tiSpectrumView = new TiSpectrumView(this);
+		tiSpectrumView.getLayoutParams().autoFillsHeight = true;
+		tiSpectrumView.getLayoutParams().autoFillsWidth = true;
 		if (shouldstart)
-			view.start();
+			tiSpectrumView.start();
 		shouldstart = false;
-		return view;
+		return tiSpectrumView;
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
@@ -87,15 +87,15 @@ public class ViewProxy extends TiViewProxy {
 
 	private void handleStart() {
 
-		if (view != null)
-			view.start();
+		if (tiSpectrumView != null)
+			tiSpectrumView.start();
 		else
 			shouldstart = true;
 	}
 
 	private void handleStop() {
-		if (view != null)
-			view.stop();
+		if (tiSpectrumView != null)
+			tiSpectrumView.stop();
 	}
 
 	@Kroll.method
