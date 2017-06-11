@@ -9,5 +9,5 @@
 "/Users/fuerst/Documents/APPC_WORKSPACE/Ti.SpectrumAnalyzerView/android/src/ca/uol/aig/fftpack/RealDoubleFFT_Odd.java"
 "/Users/fuerst/Documents/APPC_WORKSPACE/Ti.SpectrumAnalyzerView/android/src/ca/uol/aig/fftpack/RealDoubleFFT_Odd_Odd.java"
 "/Users/fuerst/Documents/APPC_WORKSPACE/Ti.SpectrumAnalyzerView/android/src/ti/spectrumanalyzer/SpectrumanalyzerModule.java"
-"/Users/fuerst/Documents/APPC_WORKSPACE/Ti.SpectrumAnalyzerView/android/src/ti/spectrumanalyzer/TiSpectrumView.java"
+"/Users/fuerst/Documents/APPC_WORKSPACE/Ti.SpectrumAnalyzerView/android/src/ti/spectrumanalyzer/UISpectrumView.java"
 "/Users/fuerst/Documents/APPC_WORKSPACE/Ti.SpectrumAnalyzerView/android/src/ti/spectrumanalyzer/ViewProxy.java"
