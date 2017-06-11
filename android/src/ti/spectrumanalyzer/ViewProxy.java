@@ -11,7 +11,7 @@ import org.appcelerator.titanium.proxy.TiViewProxy;
 import org.appcelerator.titanium.view.TiUIView;
 
 import org.appcelerator.titanium.TiBaseActivity;
-import org.appcelerator.titanium.TiLifecycle.OnLifecycleEvent;
+//import org.appcelerator.titanium.TiLifecycle.OnLifecycleEvent;
 
 import android.app.Activity;
 import android.os.Message;
@@ -33,13 +33,11 @@ public class ViewProxy extends TiViewProxy implements OnLifecycleEvent {
 	@Override
 	public TiUIView createView(Activity activity) {
 		((TiBaseActivity) activity).addOnLifecycleEventListener(this);
-		Log.d(LCAT, "createView in ViewProxy");
 		spectrumView = new UISpectrumView(this);
 		if (shouldstart) {
-			Log.d(LCAT, "starting after shouldstart");
 			spectrumView.start();
+			shouldstart = false;
 		}
-		shouldstart = false;
 		return spectrumView;
 	}
 
@@ -48,7 +46,6 @@ public class ViewProxy extends TiViewProxy implements OnLifecycleEvent {
 	public boolean handleMessage(Message msg) {
 		AsyncResult result = null;
 		switch (msg.what) {
-
 		case MSG_START: {
 			result = (AsyncResult) msg.obj;
 			Log.d(LCAT, "handleMessage START");
@@ -71,7 +68,6 @@ public class ViewProxy extends TiViewProxy implements OnLifecycleEvent {
 	@Kroll.method
 	public void start() {
 		if (TiApplication.isUIThread()) {
-			Log.d(LCAT, "direct handleStart()");
 			handleStart();
 		} else {
 			TiMessenger.sendBlockingMainMessage(getMainHandler().obtainMessage(
@@ -81,21 +77,15 @@ public class ViewProxy extends TiViewProxy implements OnLifecycleEvent {
 	}
 
 	private void handleStart() {
-		// UISpectrumView spectrumView = (UISpectrumView) peekView();
 		if (spectrumView != null) {
-			Log.d(LCAT, "handleStop");
 			spectrumView.start();
-		} else
-			Log.w(LCAT, "cannot restart!!!!!!!!!");
+		}
 	}
 
 	private void handleStop() {
-		// UISpectrumView spectrumView = (UISpectrumView) peekView();
 		if (spectrumView != null) {
-			Log.d(LCAT, "handleStop");
 			spectrumView.stop();
-		} else
-			Log.w(LCAT, "cannot stop!!!!!!!!!");
+		}
 	}
 
 	@Kroll.method
@@ -114,14 +104,12 @@ public class ViewProxy extends TiViewProxy implements OnLifecycleEvent {
 	}
 
 	public void onDestroy(Activity activity) {
-		Log.d(LCAT, "onDestroy");
 		handleStop();
 		super.onDestroy(activity);
 	}
 
 	@Override
 	public void onResume(Activity activity) {
-		Log.d(LCAT, "onResume");
 		super.onResume(activity);
 		// handleStart();
 	}
@@ -135,6 +123,7 @@ public class ViewProxy extends TiViewProxy implements OnLifecycleEvent {
 
 	@Override
 	public void onStart(Activity activity) {
+		super.onStart(activity);
 	}
 
 	@Override

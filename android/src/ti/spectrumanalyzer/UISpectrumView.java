@@ -5,45 +5,39 @@ import org.appcelerator.kroll.common.Log;
 import org.appcelerator.titanium.TiC;
 import org.appcelerator.titanium.proxy.TiViewProxy;
 import org.appcelerator.titanium.util.TiConvert;
-import org.appcelerator.titanium.view.TiDrawableReference;
 import org.appcelerator.titanium.view.TiUIView;
-
 import ca.uol.aig.fftpack.RealDoubleFFT;
-
 import android.content.Context;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
 import android.os.AsyncTask;
-
 import android.view.View;
 import android.graphics.*;
 
 public class UISpectrumView extends TiUIView {
 	private static final String LCAT = SpectrumanalyzerModule.LCAT;
 	private RealDoubleFFT transformer;
-	int blockSize = 256;
-	int frequency = 44100;
-	int color = Color.GREEN;
-	int width;
-	int height;
-	public Paint tiPaint;
-	public SpectrumView tiSpectrumView;
-	int channelConfiguration = AudioFormat.CHANNEL_IN_MONO;
-	int audioEncoding = AudioFormat.ENCODING_PCM_16BIT;
-	AudioRecord audioRecord;
-	boolean started = false;
-	boolean CANCELLED_FLAG = false;
-	MicrophoneLevelGrabber recordTask;
-	private KrollDict props;
-
+	private int blockSize = 256;
+	private int frequency = 44100;
+	private int color = Color.GREEN;
+	private int width;
+	private int height;
+	private Paint tiPaint;
 	private Bitmap tiBitmap;
 	private Canvas tiCanvas;
+	private SpectrumView tiSpectrumView; // extended from view
+	final private int channelConfiguration = AudioFormat.CHANNEL_IN_MONO;
+	final private int audioEncoding = AudioFormat.ENCODING_PCM_16BIT;
+	AudioRecord audioRecord;
+	private boolean started = false;
+	private boolean CANCELLED_FLAG = false;
+	MicrophoneLevelGrabber recordTask;
 
 	public UISpectrumView(final TiViewProxy proxy) {
 		super(proxy);
-		props = proxy.getProperties();
-		importOptions();
+
+		importOptions(proxy.getProperties());
 		transformer = new RealDoubleFFT(blockSize);
 		setPaintOptions(); // set initial paint options
 		tiSpectrumView = new SpectrumView(proxy.getActivity());
@@ -54,18 +48,13 @@ public class UISpectrumView extends TiUIView {
 		tiPaint = new Paint();
 		tiPaint.setAntiAlias(true);
 		tiPaint.setDither(true);
-		tiPaint.setColor((props.containsKeyAndNotNull("strokeColor")) ? TiConvert
-				.toColor(props, "strokeColor") : TiConvert.toColor("black"));
+		tiPaint.setColor(color);
 		tiPaint.setStyle(Paint.Style.STROKE);
 		tiPaint.setStrokeJoin(Paint.Join.ROUND);
 		tiPaint.setStrokeCap(Paint.Cap.ROUND);
-		tiPaint.setStrokeWidth((props.containsKeyAndNotNull("strokeWidth")) ? TiConvert
-				.toFloat(props.get("strokeWidth")) : 12);
-		tiPaint.setAlpha((props.containsKeyAndNotNull("strokeAlpha")) ? TiConvert
-				.toInt(props.get("strokeAlpha")) : 255);
 	}
 
-	private void importOptions() {
+	private void importOptions(KrollDict props) {
 		if (props.containsKeyAndNotNull(TiC.PROPERTY_COLOR)) {
 			color = TiConvert.toColor(props, TiC.PROPERTY_COLOR);
 		}
@@ -87,7 +76,6 @@ public class UISpectrumView extends TiUIView {
 	}
 
 	public void stop() {
-		Log.d(LCAT, "<<<<<<<<<< Stop");
 		CANCELLED_FLAG = true;
 		tiCanvas.drawColor(Color.BLACK);
 		started = false;
@@ -110,7 +98,6 @@ public class UISpectrumView extends TiUIView {
 			} catch (IllegalStateException e) {
 				Log.e(LCAT, "Recording failed" + e.toString());
 			}
-			Log.d(LCAT, "AR init, running in loop");
 			while (started) {
 				if (isCancelled() || (CANCELLED_FLAG == true)) {
 					started = false;
@@ -127,11 +114,12 @@ public class UISpectrumView extends TiUIView {
 					publishProgress(toTransform);
 				}
 			}
-			Log.d(LCAT, "after loop");
-			if (audioRecord != null) {
-				if (audioRecord.getRecordingState() == AudioRecord.RECORDSTATE_RECORDING) {
-					audioRecord.stop();
-				}
+			if (audioRecord != null
+					&& audioRecord.getState() == AudioRecord.STATE_INITIALIZED) {
+				// if (audioRecord.getState() == AudioRecord.STATE_INITIALIZED)
+				// {
+				// audioRecord.stop();
+				// }
 				audioRecord.release();
 			}
 			return true;
@@ -153,7 +141,6 @@ public class UISpectrumView extends TiUIView {
 				if (i == vals.length / 2 && false)
 					Log.d(LCAT, "SUM = " + sum + "    Y = " + downy + " LEN = "
 							+ vals.length);
-
 			}
 			tiSpectrumView.invalidate();
 		}
