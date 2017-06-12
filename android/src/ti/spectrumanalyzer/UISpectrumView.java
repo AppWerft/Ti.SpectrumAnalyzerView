@@ -21,6 +21,7 @@ public class UISpectrumView extends TiUIView {
 	private int blockSize = 256;
 	private int frequency = 44100;
 	private int color = Color.GREEN;
+	private boolean fftEnabled = true;
 	private int width;
 	private int height;
 	private Paint tiPaint;
@@ -55,6 +56,9 @@ public class UISpectrumView extends TiUIView {
 		}
 		if (props.containsKeyAndNotNull(TiC.PROPERTY_AUTOPLAY)) {
 			autoStart = props.getBoolean(TiC.PROPERTY_AUTOPLAY);
+		}
+		if (props.containsKeyAndNotNull("fftEnabled")) {
+			fftEnabled = props.getBoolean("fftEnabled");
 		}
 	}
 
@@ -110,7 +114,7 @@ public class UISpectrumView extends TiUIView {
 					for (int i = 0; i < blockSize && i < bufferReadResult; i++) {
 						toTransform[i] = (double) buffer[i] / Short.MAX_VALUE;
 					}
-					transformer.ft(toTransform);
+					// transformer.ft(toTransform);
 					publishProgress(toTransform);
 				}
 			}
@@ -132,15 +136,16 @@ public class UISpectrumView extends TiUIView {
 			if (vals.length == 0 || tiCanvas == null || tiSpectrumView == null)
 				return;
 			double sum = 0;
+			int steps = width / vals.length;
 			for (int i = 0; i < vals.length; i++) {
-				sum += vals[i];
-				int x = width * i / vals.length;
-				int downy = (int) (height / 2 - (vals[i] * height / 2));
+				int x = i;
+				int downy = (int) (height / 2 - (vals[i] * height / 20));
 				int upy = height / 2;
-				tiCanvas.drawLine(x, downy, x, upy, tiPaint);
-				if (i == vals.length / 2 && false)
-					Log.d(LCAT, "SUM = " + sum + "    Y = " + downy + " LEN = "
-							+ vals.length);
+				int s;
+				for (s = 0; s < steps; s++)
+					tiCanvas.drawLine(steps * x + s, downy, steps * x + s, upy,
+							tiPaint);
+
 			}
 			tiSpectrumView.invalidate();
 		}

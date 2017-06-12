@@ -16,6 +16,7 @@ var SpectrumView = SA.createView({
 	frequency :  44100, // optional
 	blockSize :  512, // optional
 	fade : true,
+	fftEnabled  : true, // default
 	fadeTime : 1000,
 	width: "90%",
 	top: 10,

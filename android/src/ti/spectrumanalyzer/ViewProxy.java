@@ -112,7 +112,7 @@ public class ViewProxy extends TiViewProxy implements OnLifecycleEvent {
 	@Override
 	public void onResume(Activity activity) {
 		super.onResume(activity);
-		// handleStart();
+		handleStart();
 	}
 
 	@Override
