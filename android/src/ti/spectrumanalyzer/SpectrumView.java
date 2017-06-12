@@ -61,6 +61,8 @@ public class SpectrumView extends View {
 		this.modulation = modulation;
 		this.compressType = compressType;
 		this.filled = filled;
+		transformer = new RealDoubleFFT(blockSize);
+		setPaintOptions();
 	}
 
 	public void start() {
@@ -68,6 +70,7 @@ public class SpectrumView extends View {
 		CANCELLED_FLAG = false;
 		microLevelGrabber = new MicrophoneLevelGrabber();
 		microLevelGrabber.execute();
+		Log.d(LCAT, "microLevelGrabber.execute()");
 	}
 
 	public void stop() {
@@ -124,12 +127,8 @@ public class SpectrumView extends View {
 			} catch (IllegalStateException e) {
 				Log.e(LCAT, "Recording failed" + e.toString());
 			}
-			int count = 0;
+			Log.d(LCAT, "start loop " + CANCELLED_FLAG);
 			while (started) {
-				count++;
-				if (count == 100) {
-					count = 0;
-				}
 				if (isCancelled() || (CANCELLED_FLAG == true)) {
 					started = false;
 					// publishProgress(cancelledResult);
@@ -141,9 +140,12 @@ public class SpectrumView extends View {
 						toTransform[i] = compress((double) buffer[i])
 								* modulation;
 					}
+					if (transformer == null)
+						transformer = new RealDoubleFFT(blockSize);
 					if (fftEnabled)
 						transformer.ft(toTransform);
 					publishProgress(toTransform);
+
 				}
 			}
 			if (audioRecord != null
@@ -157,11 +159,11 @@ public class SpectrumView extends View {
 			return true;
 		}
 
-		@SuppressWarnings("unused")
 		@Override
 		protected void onProgressUpdate(double[]... progress) {
+			Log.d(LCAT, "in onProgressUpdat");
 			double[] vals = progress[0];
-			if (vals.length == 0 || canvas == null || spectrumView == null)
+			if (vals.length == 0 || canvas == null)
 				return;
 			int lasty = (fftEnabled) ? height : height / 2;
 			int lastx = 0;
@@ -190,7 +192,8 @@ public class SpectrumView extends View {
 					lastx = x;
 				}
 			}
-			spectrumView.invalidate();
+			invalidate();
+			Log.d(LCAT, "xy" + lastx + "    " + lasty);
 		}
 
 		@Override
@@ -203,7 +206,7 @@ public class SpectrumView extends View {
 
 			}
 			canvas.drawColor(Color.BLACK);
-			spectrumView.invalidate();
+			invalidate();
 		}
 	}
 
@@ -229,5 +232,4 @@ public class SpectrumView extends View {
 			return foo;
 		}
 	}
-
 }

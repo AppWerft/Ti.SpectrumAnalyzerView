@@ -18,6 +18,7 @@
 "/Users/fuerst/Documents/APPC_WORKSPACE/Ti.SpectrumAnalyzerView/android/src/com/pheelicks/visualizer/renderer/CircleRenderer.java"
 "/Users/fuerst/Documents/APPC_WORKSPACE/Ti.SpectrumAnalyzerView/android/src/com/pheelicks/visualizer/renderer/LineRenderer.java"
 "/Users/fuerst/Documents/APPC_WORKSPACE/Ti.SpectrumAnalyzerView/android/src/com/pheelicks/visualizer/renderer/Renderer.java"
+"/Users/fuerst/Documents/APPC_WORKSPACE/Ti.SpectrumAnalyzerView/android/src/ti/spectrumanalyzer/SpectrumView.java"
 "/Users/fuerst/Documents/APPC_WORKSPACE/Ti.SpectrumAnalyzerView/android/src/ti/spectrumanalyzer/SpectrumanalyzerModule.java"
 "/Users/fuerst/Documents/APPC_WORKSPACE/Ti.SpectrumAnalyzerView/android/src/ti/spectrumanalyzer/UISpectrumView.java"
 "/Users/fuerst/Documents/APPC_WORKSPACE/Ti.SpectrumAnalyzerView/android/src/ti/spectrumanalyzer/ViewProxy.java"
