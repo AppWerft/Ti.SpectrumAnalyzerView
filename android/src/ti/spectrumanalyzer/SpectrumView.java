@@ -127,12 +127,10 @@ public class SpectrumView extends View {
 			} catch (IllegalStateException e) {
 				Log.e(LCAT, "Recording failed" + e.toString());
 			}
-			Log.d(LCAT, "start loop " + CANCELLED_FLAG);
 			while (started) {
 				if (isCancelled() || (CANCELLED_FLAG == true)) {
 					started = false;
 					// publishProgress(cancelledResult);
-					Log.d("doInBackground", "Cancelling the RecordTask");
 					break;
 				} else {
 					bufferReadResult = audioRecord.read(buffer, 0, blockSize);
@@ -161,7 +159,6 @@ public class SpectrumView extends View {
 
 		@Override
 		protected void onProgressUpdate(double[]... progress) {
-			Log.d(LCAT, "in onProgressUpdat");
 			double[] vals = progress[0];
 			if (vals.length == 0 || canvas == null)
 				return;
@@ -193,7 +190,6 @@ public class SpectrumView extends View {
 				}
 			}
 			invalidate();
-			Log.d(LCAT, "xy" + lastx + "    " + lasty);
 		}
 
 		@Override
@@ -214,18 +210,18 @@ public class SpectrumView extends View {
 		switch (compressType) {
 		case SpectrumanalyzerModule.CURVE_LOG:
 			if (foo < 0) {
-				return -1 * Math.log10(-foo);
+				return -1000 * Math.log10(-10000 * foo);
 			} else if (foo > 0) {
-				return Math.log10(foo);
+				return 1000 * Math.log10(10000 * foo);
 			} else
 				return 0.0;
 		case SpectrumanalyzerModule.CURVE_LINEAR:
 			return foo;
 		case SpectrumanalyzerModule.CURVE_SQRT:
 			if (foo < 0) {
-				return -1 * Math.sqrt(-foo);
+				return -1 * Math.sqrt(-10000 * foo);
 			} else if (foo > 0) {
-				return Math.sqrt(foo);
+				return Math.sqrt(10000 * foo);
 			} else
 				return 0;
 		default:
