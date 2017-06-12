@@ -5,6 +5,13 @@
 ## Permissions
 
 You need the runtime permission _AUDIO_RECORDING_
+
+## Constants
+
+- [x] CURVE_LINEAR
+- [x] CURVE_LOG
+- [x] CURVE_SQRT
+
 ## Usage
 
 ```javascript
@@ -15,9 +22,10 @@ var SpectrumView = SA.createView({
 	backgroundColor : "black",
 	frequency :  44100, // optional
 	blockSize :  512, // optional
-	fade : true,
+	fadeEnabled : true, // default
 	fftEnabled  : true, // default
-	fadeTime : 1000,
+	fadeTime : 50, // 0 … 255
+	compressType : SA.CURVE_LOG,
 	width: "90%",
 	top: 10,
 	height : 300
