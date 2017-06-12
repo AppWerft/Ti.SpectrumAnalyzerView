@@ -182,3 +182,4 @@ public class UISpectrumView extends TiUIView {
 		}
 	}
 }
+// https://github.com/sommukhopadhyay/FFTBasedSpectrumAnalyzer/blob/master/src/com/somitsolutions/android/spectrumanalyzer/SoundRecordAndAnalysisActivity.java

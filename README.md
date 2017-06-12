@@ -1,5 +1,7 @@
 # Ti.SpectrumAnalyzer
 
+<img src="https://raw.githubusercontent.com/AppWerft/Ti.SpectrumAnalyzerView/master/screen.png" width=240 />
+
 ## Permissions
 
 You need the runtime permission _AUDIO_RECORDING_
