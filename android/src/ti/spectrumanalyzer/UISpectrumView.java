@@ -29,29 +29,19 @@ public class UISpectrumView extends TiUIView {
 	private SpectrumView tiSpectrumView; // extended from view
 	final private int channelConfiguration = AudioFormat.CHANNEL_IN_MONO;
 	final private int audioEncoding = AudioFormat.ENCODING_PCM_16BIT;
-	AudioRecord audioRecord;
+	private AudioRecord audioRecord;
 	private boolean started = false;
 	private boolean CANCELLED_FLAG = false;
-	MicrophoneLevelGrabber recordTask;
+	private MicrophoneLevelGrabber recordTask;
 
 	public UISpectrumView(final TiViewProxy proxy) {
 		super(proxy);
-
+		tiSpectrumView = new SpectrumView(proxy.getActivity());
+		tiSpectrumView.setBackgroundColor(Color.GREEN);
+		setNativeView(tiSpectrumView);
 		importOptions(proxy.getProperties());
 		transformer = new RealDoubleFFT(blockSize);
 		setPaintOptions(); // set initial paint options
-		tiSpectrumView = new SpectrumView(proxy.getActivity());
-		setNativeView(tiSpectrumView);
-	}
-
-	private void setPaintOptions() {
-		tiPaint = new Paint();
-		tiPaint.setAntiAlias(true);
-		tiPaint.setDither(true);
-		tiPaint.setColor(color);
-		tiPaint.setStyle(Paint.Style.STROKE);
-		tiPaint.setStrokeJoin(Paint.Join.ROUND);
-		tiPaint.setStrokeCap(Paint.Cap.ROUND);
 	}
 
 	private void importOptions(KrollDict props) {
@@ -63,22 +53,28 @@ public class UISpectrumView extends TiUIView {
 		}
 	}
 
-	@Override
-	public void processProperties(KrollDict d) {
-		super.processProperties(d);
+	private void setPaintOptions() {
+		tiPaint = new Paint();
+		tiPaint.setAntiAlias(true);
+		tiPaint.setDither(true);
+		tiPaint.setColor(Color.GREEN);
+		tiPaint.setStyle(Paint.Style.STROKE);
+		tiPaint.setStrokeJoin(Paint.Join.ROUND);
+		tiPaint.setStrokeCap(Paint.Cap.ROUND);
 	}
 
 	public void start() {
 		started = true;
 		CANCELLED_FLAG = false;
-		new MicrophoneLevelGrabber().execute();
-		Log.d(LCAT, "TiSpectrumView started");
+		recordTask = new MicrophoneLevelGrabber();
+		recordTask.execute();
 	}
 
 	public void stop() {
 		CANCELLED_FLAG = true;
 		tiCanvas.drawColor(Color.BLACK);
 		started = false;
+		recordTask.cancel(true);
 	}
 
 	private class MicrophoneLevelGrabber extends
@@ -106,7 +102,6 @@ public class UISpectrumView extends TiUIView {
 					break;
 				} else {
 					bufferReadResult = audioRecord.read(buffer, 0, blockSize);
-
 					for (int i = 0; i < blockSize && i < bufferReadResult; i++) {
 						toTransform[i] = (double) buffer[i] / Short.MAX_VALUE;
 					}
@@ -159,7 +154,7 @@ public class UISpectrumView extends TiUIView {
 		}
 	}
 
-	public class SpectrumView extends View {
+	private class SpectrumView extends View {
 		public SpectrumView(Context ctx) {
 			super(ctx);
 		}
@@ -167,16 +162,12 @@ public class UISpectrumView extends TiUIView {
 		@Override
 		protected void onSizeChanged(int w, int h, int oldw, int oldh) {
 			super.onSizeChanged(w, h, oldw, oldh);
-			width = w;
-			height = h;
-			Log.d(LCAT, "onSizeChanged " + w + "x" + h);
-			if (tiBitmap == null) {
-				tiBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
-			} else {
-				tiBitmap = Bitmap.createScaledBitmap(tiBitmap, w, h, true);
-			}
+			tiBitmap = (tiBitmap == null) ? Bitmap.createBitmap(w, h,
+					Bitmap.Config.ARGB_8888) : Bitmap.createScaledBitmap(
+					tiBitmap, w, h, true);
 			tiCanvas = new Canvas(tiBitmap);
+			width = w; // need for scaled drawing
+			height = h;
 		}
 	}
-
 }
