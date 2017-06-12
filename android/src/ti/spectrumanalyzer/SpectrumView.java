@@ -6,6 +6,7 @@ import org.appcelerator.titanium.TiC;
 import org.appcelerator.titanium.proxy.TiViewProxy;
 import org.appcelerator.titanium.util.TiConvert;
 import org.appcelerator.titanium.view.TiUIView;
+
 import ca.uol.aig.fftpack.RealDoubleFFT;
 import android.content.Context;
 import android.media.AudioFormat;
@@ -17,7 +18,7 @@ import android.graphics.*;
 import android.graphics.PorterDuff.Mode;
 import android.graphics.PorterDuffXfermode;
 
-public class UISpectrumView extends TiUIView {
+public class SpectrumView extends View {
 	private static final String LCAT = SpectrumanalyzerModule.LCAT;
 	private RealDoubleFFT transformer;
 	private int blockSize = 256;
@@ -43,60 +44,23 @@ public class UISpectrumView extends TiUIView {
 	private boolean CANCELLED_FLAG = false;
 	private MicrophoneLevelGrabber microLevelGrabber;
 
-	public UISpectrumView(final TiViewProxy proxy) {
-		super(proxy);
-		spectrumView = new SpectrumView(proxy.getActivity());
-		spectrumView.setBackgroundColor(Color.GREEN);
-		spectrumView.invalidate();
-		setNativeView(spectrumView);
-		importOptions(proxy.getProperties());
-		transformer = new RealDoubleFFT(blockSize);
-		setPaintOptions(); // set initial paint options
+	public SpectrumView(Context context) {
+		this(context, 256, 44100, Color.GREEN, true, true, 1.0,
+				SpectrumanalyzerModule.CURVE_LINEAR, false);
 	}
 
-	private void importOptions(KrollDict props) {
-		if (props.containsKeyAndNotNull(TiC.PROPERTY_COLOR)) {
-			color = TiConvert.toColor(props, TiC.PROPERTY_COLOR);
-		}
-		if (props.containsKeyAndNotNull(SpectrumanalyzerModule.PROP_BLOCKSIZE)) {
-			blockSize = props.getInt(SpectrumanalyzerModule.PROP_BLOCKSIZE);
-		}
-		if (props.containsKeyAndNotNull(TiC.PROPERTY_AUTOPLAY)) {
-			autoStart = props.getBoolean(TiC.PROPERTY_AUTOPLAY);
-		}
-		if (props.containsKeyAndNotNull(SpectrumanalyzerModule.PROP_FFTENABLED)) {
-			fftEnabled = props
-					.getBoolean(SpectrumanalyzerModule.PROP_FFTENABLED);
-		}
-		if (props
-				.containsKeyAndNotNull(SpectrumanalyzerModule.PROP_FADEENABLED)) {
-			fadeEnabled = props
-					.getBoolean(SpectrumanalyzerModule.PROP_FADEENABLED);
-		}
-		if (props.containsKeyAndNotNull(SpectrumanalyzerModule.PROP_MODULATION)) {
-			modulation = props
-					.getDouble(SpectrumanalyzerModule.PROP_MODULATION);
-		}
-		if (props.containsKeyAndNotNull(SpectrumanalyzerModule.PROP_FILLED)) {
-			filled = props.getBoolean(SpectrumanalyzerModule.PROP_FILLED);
-		}
-		if (props
-				.containsKeyAndNotNull(SpectrumanalyzerModule.PROP_COMPRESSTYPE)) {
-			compressType = props
-					.getInt(SpectrumanalyzerModule.PROP_COMPRESSTYPE);
-		}
-	}
-
-	private void setPaintOptions() {
-		// main pencil
-		mainPaint.setAntiAlias(true);
-		mainPaint.setDither(true);
-		mainPaint.setColor(Color.GREEN);
-		mainPaint.setStyle(Paint.Style.STROKE);
-		mainPaint.setStrokeJoin(Paint.Join.ROUND);
-		mainPaint.setStrokeCap(Paint.Cap.ROUND);
-		fadePaint.setColor(Color.argb(238, 255, 255, 255)); // Adjust alpha to
-		fadePaint.setXfermode(new PorterDuffXfermode(Mode.MULTIPLY));
+	public SpectrumView(Context context, int blockSize, int frequency,
+			int color, boolean fftEnabled, boolean fadeEnabled,
+			double modulation, int compressType, boolean filled) {
+		super(context);
+		this.blockSize = blockSize;
+		this.frequency = frequency;
+		this.color = color;
+		this.fftEnabled = fftEnabled;
+		this.fadeEnabled = fadeEnabled;
+		this.modulation = modulation;
+		this.compressType = compressType;
+		this.filled = filled;
 	}
 
 	public void start() {
@@ -111,6 +75,36 @@ public class UISpectrumView extends TiUIView {
 		canvas.drawColor(Color.BLACK);
 		started = false;
 		microLevelGrabber.cancel(true);
+	}
+
+	public void setPaintOptions() {
+		// main pencil
+		mainPaint.setAntiAlias(true);
+		mainPaint.setDither(true);
+		mainPaint.setColor(Color.GREEN);
+		mainPaint.setStyle(Paint.Style.STROKE);
+		mainPaint.setStrokeJoin(Paint.Join.ROUND);
+		mainPaint.setStrokeCap(Paint.Cap.ROUND);
+		fadePaint.setColor(Color.argb(238, 255, 255, 255)); // Adjust alpha to
+		fadePaint.setXfermode(new PorterDuffXfermode(Mode.MULTIPLY));
+	}
+
+	@Override
+	protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+		super.onSizeChanged(w, h, oldw, oldh);
+		tiBitmap = (tiBitmap == null) ? Bitmap.createBitmap(w, h,
+				Bitmap.Config.ARGB_8888) : Bitmap.createScaledBitmap(tiBitmap,
+				w, h, true);
+		canvas = new Canvas(tiBitmap);
+		width = w; // need for scaled drawing
+		height = h;
+		Log.d(LCAT, "width x height = " + w + " x " + h);
+	}
+
+	@Override
+	protected void onDraw(Canvas _canvas) {
+		canvas.drawPaint(fadePaint);
+		_canvas.drawBitmap(tiBitmap, new Matrix(), null);
 	}
 
 	private class MicrophoneLevelGrabber extends
@@ -213,30 +207,6 @@ public class UISpectrumView extends TiUIView {
 		}
 	}
 
-	private class SpectrumView extends View {
-		public SpectrumView(Context ctx) {
-			super(ctx);
-		}
-
-		@Override
-		protected void onSizeChanged(int w, int h, int oldw, int oldh) {
-			super.onSizeChanged(w, h, oldw, oldh);
-			tiBitmap = (tiBitmap == null) ? Bitmap.createBitmap(w, h,
-					Bitmap.Config.ARGB_8888) : Bitmap.createScaledBitmap(
-					tiBitmap, w, h, true);
-			canvas = new Canvas(tiBitmap);
-			width = w; // need for scaled drawing
-			height = h;
-			Log.d(LCAT, "width x height = " + w + " x " + h);
-		}
-
-		@Override
-		protected void onDraw(Canvas _canvas) {
-			canvas.drawPaint(fadePaint);
-			_canvas.drawBitmap(tiBitmap, new Matrix(), null);
-		}
-	}
-
 	private double compress(double foo) {
 		switch (compressType) {
 		case SpectrumanalyzerModule.CURVE_LOG:
@@ -259,5 +229,5 @@ public class UISpectrumView extends TiUIView {
 			return foo;
 		}
 	}
+
 }
-// https://github.com/sommukhopadhyay/FFTBasedSpectrumAnalyzer/blob/master/src/com/somitsolutions/android/spectrumanalyzer/SoundRecordAndAnalysisActivity.java

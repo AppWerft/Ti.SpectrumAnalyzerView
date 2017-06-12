@@ -12,6 +12,7 @@ public class SpectrumanalyzerModule extends KrollModule {
 	public final static String PROP_COMPRESSTYPE = "compressType";
 	public final static String PROP_FFTENABLED = "fftEnabled";
 	public final static String PROP_MODULATION = "modulation";
+	public final static String PROP_FILLED = "filled";
 
 	@Kroll.constant
 	public final static int CURVE_LINEAR = 0;
