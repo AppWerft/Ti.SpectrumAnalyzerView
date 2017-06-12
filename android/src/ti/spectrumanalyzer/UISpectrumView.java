@@ -38,6 +38,7 @@ public class UISpectrumView extends TiUIView {
 		super(proxy);
 		tiSpectrumView = new SpectrumView(proxy.getActivity());
 		tiSpectrumView.setBackgroundColor(Color.GREEN);
+		tiSpectrumView.invalidate();
 		setNativeView(tiSpectrumView);
 		importOptions(proxy.getProperties());
 		transformer = new RealDoubleFFT(blockSize);
@@ -168,6 +169,14 @@ public class UISpectrumView extends TiUIView {
 			tiCanvas = new Canvas(tiBitmap);
 			width = w; // need for scaled drawing
 			height = h;
+			Log.d(LCAT, "width x height = " + w + " x " + h);
+		}
+
+		@Override
+		protected void onDraw(Canvas canvas) {
+			canvas.drawColor(TiConvert.toColor("transparent"));
+			canvas.drawBitmap(tiBitmap, 0, 0, tiPaint);
+
 		}
 	}
 }

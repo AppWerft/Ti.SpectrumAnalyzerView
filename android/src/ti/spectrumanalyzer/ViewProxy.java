@@ -23,8 +23,9 @@ public class ViewProxy extends TiViewProxy implements OnLifecycleEvent {
 	private static final int MSG_START = MSG_FIRST_ID + 500;
 	private static final int MSG_STOP = MSG_FIRST_ID + 501;
 	private static final int MSG_CLEAR = MSG_FIRST_ID + 502;
-	UISpectrumView spectrumView;
 	private boolean shouldstart = false;
+
+	private UISpectrumView spectrumView;
 
 	public ViewProxy() {
 		super();
