@@ -31,6 +31,7 @@ public class UISpectrumView extends TiUIView {
 	final private int audioEncoding = AudioFormat.ENCODING_PCM_16BIT;
 	private AudioRecord audioRecord;
 	private boolean started = false;
+	private boolean autoStart = false;
 	private boolean CANCELLED_FLAG = false;
 	private MicrophoneLevelGrabber recordTask;
 
@@ -51,6 +52,9 @@ public class UISpectrumView extends TiUIView {
 		}
 		if (props.containsKeyAndNotNull(SpectrumanalyzerModule.PROP_BLOCKSIZE)) {
 			blockSize = props.getInt(SpectrumanalyzerModule.PROP_BLOCKSIZE);
+		}
+		if (props.containsKeyAndNotNull(TiC.PROPERTY_AUTOPLAY)) {
+			autoStart = props.getBoolean(TiC.PROPERTY_AUTOPLAY);
 		}
 	}
 
@@ -174,9 +178,7 @@ public class UISpectrumView extends TiUIView {
 
 		@Override
 		protected void onDraw(Canvas canvas) {
-			canvas.drawColor(TiConvert.toColor("transparent"));
 			canvas.drawBitmap(tiBitmap, 0, 0, tiPaint);
-
 		}
 	}
 }
