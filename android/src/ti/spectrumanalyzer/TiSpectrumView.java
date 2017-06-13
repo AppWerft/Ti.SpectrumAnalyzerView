@@ -7,10 +7,10 @@ import org.appcelerator.titanium.util.TiConvert;
 import org.appcelerator.titanium.view.TiUIView;
 import android.graphics.*;
 
-public class UISpectrumView extends TiUIView {
+public class TiSpectrumView extends TiUIView {
 	private SpectrumView spectrumView; // extended from view
 
-	public UISpectrumView(final TiViewProxy proxy) {
+	public TiSpectrumView(final TiViewProxy proxy) {
 		super(proxy);
 		// all props with defaults:
 		int blockSize = 256;
@@ -27,6 +27,7 @@ public class UISpectrumView extends TiUIView {
 		if (props.containsKeyAndNotNull(TiC.PROPERTY_COLOR)) {
 			color = TiConvert.toColor(props, TiC.PROPERTY_COLOR);
 		}
+
 		if (props.containsKeyAndNotNull(SpectrumanalyzerModule.PROP_BLOCKSIZE)) {
 			blockSize = props.getInt(SpectrumanalyzerModule.PROP_BLOCKSIZE);
 		}

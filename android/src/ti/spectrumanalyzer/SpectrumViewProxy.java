@@ -17,7 +17,7 @@ import android.app.Activity;
 import android.os.Message;
 
 @Kroll.proxy(creatableInModule = SpectrumanalyzerModule.class)
-public class ViewProxy extends TiViewProxy implements OnLifecycleEvent {
+public class SpectrumViewProxy extends TiViewProxy implements OnLifecycleEvent {
 	private static final String LCAT = SpectrumanalyzerModule.LCAT;
 	private static final int MSG_FIRST_ID = TiViewProxy.MSG_LAST_ID + 1;
 	private static final int MSG_START = MSG_FIRST_ID + 500;
@@ -25,16 +25,16 @@ public class ViewProxy extends TiViewProxy implements OnLifecycleEvent {
 	private static final int MSG_CLEAR = MSG_FIRST_ID + 502;
 	private boolean shouldstart = false;
 
-	private UISpectrumView spectrumView;
+	private TiSpectrumView spectrumView;
 
-	public ViewProxy() {
+	public SpectrumViewProxy() {
 		super();
 	}
 
 	@Override
 	public TiUIView createView(Activity activity) {
 		((TiBaseActivity) activity).addOnLifecycleEventListener(this);
-		spectrumView = new UISpectrumView(this);
+		spectrumView = new TiSpectrumView(this);
 		if (shouldstart) {
 			spectrumView.start();
 			shouldstart = false;
@@ -42,7 +42,6 @@ public class ViewProxy extends TiViewProxy implements OnLifecycleEvent {
 		return spectrumView;
 	}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
 	public boolean handleMessage(Message msg) {
 		AsyncResult result = null;
